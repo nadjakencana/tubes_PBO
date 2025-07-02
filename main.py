@@ -120,9 +120,10 @@ if st.session_state.username:
     for row in data:
         with st.expander(f"{row.nama} ({row.harga})"):
             st.write(f"Jam: {row.jam_buka} | Rating: {row.rating}")
-            st.image(row.foto, width=300)
+            st.markdown(f"<img src='{row.foto}' width='300'>", unsafe_allow_html=True)
             if st.session_state.username == "nadjakencana":
-                st.caption(f"🧑‍💻 Ditambahkan oleh: `{row.creator}`")
+                creator = getattr(row, "creator", "unknown")
+                st.caption(f"🧑‍💻 Ditambahkan oleh: `{creator}`")
             st.write(row.komentar)
             if st.session_state.username == "nadjakencana":
                 col1, col2 = st.columns(2)
