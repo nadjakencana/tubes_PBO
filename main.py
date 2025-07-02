@@ -120,7 +120,17 @@ if st.session_state.username:
     for row in data:
         with st.expander(f"{row.nama} ({row.harga})"):
             st.write(f"Jam: {row.jam_buka} | Rating: {row.rating}")
-            st.markdown(f"<img src='{row.foto}' width='300'>", unsafe_allow_html=True)
+            
+            # --- BLOK KODE YANG DIPERBARUI UNTUK MENAMPILKAN FOTO ---
+            if row.foto and row.foto.startswith("http"):
+                try:
+                    st.markdown(f"<img src='{row.foto}' width='300'>", unsafe_allow_html=True)
+                except:
+                    st.markdown("📸 (Gagal menampilkan gambar)")
+            else:
+                st.markdown("📸 (Belum ada foto untuk lokasi ini)")
+            # --- AKHIR BLOK KODE YANG DIPERBARUI ---
+
             if st.session_state.username == "nadjakencana":
                 creator = getattr(row, "creator", "unknown")
                 st.caption(f"🧑‍💻 Ditambahkan oleh: `{creator}`")
