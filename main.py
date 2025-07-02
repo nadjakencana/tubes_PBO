@@ -9,6 +9,27 @@ from folium.plugins import Fullscreen
 # ===== SETTING PAGE =====
 st.set_page_config(page_title="Nongkrong Tembalang", layout="wide")
 
+# ===== SESSION STATE UNTUK LOGIN =====
+if "username" not in st.session_state:
+    st.session_state.username = None
+
+# ===== LOGIN PANEL =====
+with st.sidebar:
+    st.subheader("🔐 Login Pengguna")
+    if st.session_state.username is None:
+        username_input = st.text_input("Masukkan Username")
+        if st.button("Login"):
+            if username_input.strip() != "":
+                st.session_state.username = username_input.strip()
+                st.success(f"Login berhasil sebagai {st.session_state.username}")
+            else:
+                st.warning("Username tidak boleh kosong!")
+    else:
+        st.success(f"Login sebagai {st.session_state.username}")
+        if st.button("Logout"):
+            st.session_state.username = None
+            st.experimental_rerun()
+
 # ====== LOAD DATA SAFELY ======
 CSV_PATH = "data/nongkrong_tembalang.csv"
 @st.cache_data(ttl=10)
@@ -25,11 +46,10 @@ df = load_data()
 
 st.title("📍 Tracker Nongkrong Mahasiswa Tembalang")
 
-# ====== SEARCH BOX ======
+# ====== SEARCH & FILTER ======
 st.sidebar.subheader("🔍 Cari Tempat Nongkrong")
 search_query = st.sidebar.text_input("Cari berdasarkan nama")
 
-# ====== FILTER ======
 st.sidebar.subheader("🎯 Filter")
 jam_buka_opsi = df["Jam Buka"].dropna().unique().tolist()
 harga_opsi = df["Harga"].dropna().unique().tolist()
@@ -37,16 +57,14 @@ harga_opsi = df["Harga"].dropna().unique().tolist()
 jam_buka_filter = st.sidebar.multiselect("Jam Buka", jam_buka_opsi, default=jam_buka_opsi)
 harga_filter = st.sidebar.multiselect("Harga", harga_opsi, default=harga_opsi)
 
-# ====== FILTER DATA ======
 filtered_df = df[
     (df["Jam Buka"].isin(jam_buka_filter)) &
     (df["Harga"].isin(harga_filter))
 ]
-
 if search_query:
     filtered_df = filtered_df[filtered_df["Nama"].str.contains(search_query, case=False)]
 
-# ====== FUNGSI WARNA ======
+# ====== FUNGSI WARNA MARKER ======
 def get_color(harga):
     if harga.lower() == "murah":
         return "green"
@@ -91,42 +109,41 @@ else:
     st.warning("Tidak ada lokasi yang cocok dengan filter atau pencarian.")
 
 # ====== FORM TAMBAH LOKASI ======
-st.sidebar.markdown("---")
-st.sidebar.subheader("➕ Tambah Tempat Baru")
-with st.sidebar.form("form_tambah"):
-    nama_baru = st.text_input("Nama Tempat")
-    st.caption("🛈 Nama harus bener")
+if st.session_state.username:
+    st.sidebar.markdown("---")
+    st.sidebar.subheader("➕ Tambah Tempat Baru")
+    with st.sidebar.form("form_tambah"):
+        nama_baru = st.text_input("Nama Tempat")
+        lat_baru = st.number_input("Latitude", format="%f")
+        lon_baru = st.number_input("Longitude", format="%f")
+        jam24 = st.checkbox("Buka 24 Jam")
+        harga_baru = st.selectbox("Harga", ["Murah", "Mending Mahal", "Mahal"])
+        rating_baru = st.slider("Rating (Dummy)", 1.0, 5.0, 4.0, 0.1)
+        komentar_baru = st.text_input("Komentar (Dummy)", "Tempat baru nih guys!")
+        link_foto = st.text_input("Link Foto")
 
-    lat_baru = st.number_input("Latitude", format="%f")
-    lon_baru = st.number_input("Longitude", format="%f")
-    st.caption("🛈 Temukan Lokasi di Google Maps lalu klik kanan untuk salin koordinat")
+        submit = st.form_submit_button("Tambah Lokasi")
 
-    jam24 = st.checkbox("Buka 24 Jam")
-    harga_baru = st.selectbox("Harga", ["Murah", "Mending Mahal", "Mahal"])
-    rating_baru = st.slider("Rating (Dummy)", 1.0, 5.0, 4.0, 0.1)
-    komentar_baru = st.text_input("Komentar (Dummy)", "Tempat baru nih guys!")
-    link_foto = st.text_input("Link Foto")
+        if submit:
+            jam_buka_val = "24 Jam" if jam24 else "Nggak 24 Jam"
+            new_row = pd.DataFrame([{
+                "Nama": nama_baru,
+                "Jam Buka": jam_buka_val,
+                "Harga": harga_baru,
+                "Latitude": lat_baru,
+                "Longitude": lon_baru,
+                "Foto": link_foto,
+                "Rating": rating_baru,
+                "Komentar": komentar_baru
+            }])
 
-    submit = st.form_submit_button("Tambah Lokasi")
-
-    if submit:
-        jam_buka_val = "24 Jam" if jam24 else "Nggak 24 Jam"
-        new_row = pd.DataFrame([{
-            "Nama": nama_baru,
-            "Jam Buka": jam_buka_val,
-            "Harga": harga_baru,
-            "Latitude": lat_baru,
-            "Longitude": lon_baru,
-            "Foto": link_foto,
-            "Rating": rating_baru,
-            "Komentar": komentar_baru
-        }])
-
-        try:
-            existing_df = pd.read_csv(CSV_PATH)
-            updated_df = pd.concat([existing_df, new_row], ignore_index=True)
-            updated_df.to_csv(CSV_PATH, index=False)
-            st.sidebar.success("✅ Lokasi berhasil ditambahkan!")
-            st.rerun()
-        except Exception as e:
-            st.sidebar.error(f"Gagal menambahkan data: {e}")
+            try:
+                existing_df = pd.read_csv(CSV_PATH)
+                updated_df = pd.concat([existing_df, new_row], ignore_index=True)
+                updated_df.to_csv(CSV_PATH, index=False)
+                st.sidebar.success("✅ Lokasi berhasil ditambahkan!")
+                st.rerun()
+            except Exception as e:
+                st.sidebar.error(f"Gagal menambahkan data: {e}")
+else:
+    st.sidebar.info("Login dulu untuk menambahkan lokasi!")
