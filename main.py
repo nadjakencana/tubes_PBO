@@ -11,7 +11,7 @@ st.set_page_config(page_title="Nongkrong Tembalang", layout="wide")
 
 # ====== LOAD DATA SAFELY ======
 CSV_PATH = "data/nongkrong_tembalang.csv"
-@st.cache_data
+@st.cache_data(ttl=10)
 def load_data():
     try:
         df = pd.read_csv(CSV_PATH)
@@ -127,5 +127,6 @@ with st.sidebar.form("form_tambah"):
             updated_df = pd.concat([existing_df, new_row], ignore_index=True)
             updated_df.to_csv(CSV_PATH, index=False)
             st.sidebar.success("✅ Lokasi berhasil ditambahkan!")
+            st.rerun()
         except Exception as e:
             st.sidebar.error(f"Gagal menambahkan data: {e}")
