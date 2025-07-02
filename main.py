@@ -54,7 +54,6 @@ if filtered:
     Fullscreen().add_to(m)
 
     for row in filtered:
-        # Logika ini sudah benar, memastikan foto hanya muncul jika ada link.
         foto_html = f"<img src='{row.foto}' width='200'><br>" if row.foto and row.foto.startswith("http") else ""
         popup = f"""
         <b>{row.nama}</b><br>
@@ -63,7 +62,7 @@ if filtered:
         ⭐ {row.rating}<br>
         <i>{row.komentar}</i><br>
         {foto_html}
-        <a href="https://www.google.com/maps?q={row.latitude},{row.longitude}" target="_blank">📍 Lihat di Google Maps</a>
+        <a href="https://www.google.com/maps/search/?api=1&query={row.latitude},{row.longitude}" target="_blank">📍 Lihat di Google Maps</a>
         """
         folium.Marker(
             location=[row.latitude, row.longitude],
@@ -87,10 +86,26 @@ if st.session_state.username:
     with st.form("form_tambah"):
         nama = st.text_input("Nama", tempat.nama)
         jam_buka = st.selectbox("Jam Buka", ["24 Jam", "Nggak 24 Jam"], index=0 if tempat.jam_buka == "24 Jam" else 1)
-        # Menambahkan 'or "Murah"' untuk mencegah error jika nilai harga kosong
         harga = st.selectbox("Harga", ["Murah", "Mending Mahal", "Mahal"], index=["Murah", "Mending Mahal", "Mahal"].index(tempat.harga or "Murah"))
         lat = st.number_input("Latitude", value=tempat.latitude, step=0.0000000001, format="%.10f")
         lon = st.number_input("Longitude", value=tempat.longitude, step=0.0000000001, format="%.10f")
+
+        # --- KETERANGAN BANTUAN DITAMBAHKAN DI SINI ---
+        with st.expander("💡 Cara mendapatkan Latitude & Longitude"):
+            st.markdown("""
+            **Di Komputer:**
+            1. Buka Google Maps.
+            2. Cari lokasi yang diinginkan.
+            3. Klik kanan pada lokasi tersebut, koordinat akan muncul dan bisa disalin.
+
+            **Di Aplikasi Seluler (Android/iOS):**
+            1. Buka aplikasi Google Maps.
+            2. Cari lokasi yang diinginkan.
+            3. Tekan dan tahan (tap lama) pada lokasi tersebut hingga muncul pin.
+            4. Koordinat lokasi akan muncul di kotak pencarian bagian atas.
+            """)
+        # --- AKHIR BLOK BANTUAN ---
+        
         foto = st.text_input("Link Foto", value=tempat.foto)
         rating = st.slider("Rating", 1.0, 5.0, value=tempat.rating, step=0.1)
         komentar = st.text_input("Komentar", value=tempat.komentar)
@@ -121,26 +136,19 @@ if st.session_state.username:
 # ===== DAFTAR TEMPAT + AKSI =====
 if st.session_state.username:
     st.subheader("📄 Daftar Lokasi")
-    # Perhatikan: data di-looping di sini, bukan filtered
     for row in data:
         with st.expander(f"{row.nama} ({row.harga})"):
             st.write(f"Jam: {row.jam_buka} | Rating: {row.rating}")
             
-            # --- INI ADALAH BLOK KODE YANG BENAR UNTUK MENCEGAH ERROR ---
             if row.foto and row.foto.startswith("http"):
                 st.markdown(f"<img src='{row.foto}' width='300'>", unsafe_allow_html=True)
             else:
                 st.markdown("📸 Belum ada foto.")
-            # --- AKHIR BLOK PERBAIKAN ---
 
-            # Tampilkan creator hanya jika login sebagai admin
             if st.session_state.username == "nadjakencana":
-                # Gunakan getattr untuk keamanan jika atribut 'creator' tidak ada
                 creator = getattr(row, "creator", "unknown")
                 st.caption(f"🧑‍💻 Ditambahkan oleh: `{creator}`")
             st.write(row.komentar)
-            
-            # Tampilkan tombol Edit/Hapus hanya jika login sebagai admin
             if st.session_state.username == "nadjakencana":
                 col1, col2 = st.columns(2)
                 with col1:
