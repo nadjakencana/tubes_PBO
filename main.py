@@ -126,9 +126,9 @@ if st.session_state.username:
                 try:
                     st.markdown(f"<img src='{row.foto}' width='300'>", unsafe_allow_html=True)
                 except:
-                    st.markdown("📸 (Gagal menampilkan gambar)")
+                    st.markdown("📸 Gagal menampilkan gambar.")
             else:
-                st.markdown("📸 (Belum ada foto untuk lokasi ini)")
+                st.markdown("📸 Belum ada foto.")
             # --- AKHIR BLOK KODE YANG DIPERBARUI ---
 
             if st.session_state.username == "nadjakencana":
