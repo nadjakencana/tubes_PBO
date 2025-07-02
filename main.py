@@ -43,7 +43,7 @@ harga_filter = st.sidebar.multiselect("Harga", harga_opsi, default=harga_opsi)
 filtered = [d for d in data if d.jam_buka in jam_filter and d.harga in harga_filter]
 
 # ====== TAMPILKAN PETA ======
-st.title("📍 Tracker Nongkrong Mahasiswa Tembalang")
+st.title("📍 Info Nongkrong Mahasiswa Tembalang")
 
 def get_color(h):
     h = h.lower()
