@@ -54,13 +54,14 @@ if filtered:
     Fullscreen().add_to(m)
 
     for row in filtered:
+        foto_html = f"<img src='{row.foto}' width='200'><br>" if row.foto and row.foto.startswith("http") else ""
         popup = f"""
         <b>{row.nama}</b><br>
         Jam Buka: {row.jam_buka}<br>
         Harga: {row.harga}<br>
         ⭐ {row.rating}<br>
         <i>{row.komentar}</i><br>
-        <img src="{row.foto}" width="200"><br>
+        {foto_html}
         <a href="https://www.google.com/maps/search/?api=1&query={row.latitude},{row.longitude}" target="_blank">📍 Lihat di Google Maps</a>
         """
         folium.Marker(
