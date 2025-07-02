@@ -3,7 +3,6 @@ import sqlite3
 from dataclasses import dataclass
 
 @dataclass
-@dataclass
 class TempatNongkrong:
     id: int
     nama: str
@@ -14,7 +13,7 @@ class TempatNongkrong:
     foto: str
     rating: float
     komentar: str
-    creator: str = ""  # tambahkan default "" agar tetap kompatibel
+    creator: str
 
 class DataManager:
     def __init__(self, db_path="database/app.db"):
@@ -41,8 +40,10 @@ class DataManager:
         cursor = self.conn.cursor()
         cursor.execute("SELECT * FROM tempat")
         rows = cursor.fetchall()
-        return [TempatNongkrong(*row[:9]) for row in rows]  # tetap ambil 9 kolom pertama
+        # PERBAIKAN: Hapus slicing [:9] agar semua 10 kolom (termasuk creator) diambil
+        return [TempatNongkrong(*row) for row in rows]
 
+    # ... sisa fungsi lainnya tetap sama ...
     def tambah_tempat(self, t: TempatNongkrong, creator: str):
         cursor = self.conn.cursor()
         cursor.execute('''INSERT INTO tempat (nama, jam_buka, harga, latitude, longitude, foto, rating, komentar, creator)
